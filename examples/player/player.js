@@ -10,7 +10,7 @@
 
 // Cache references to DOM elements.
 var elms = ['track', 'timer', 'duration', 'playBtn', 'pauseBtn', 'prevBtn', 'nextBtn', 'playlistBtn', 'volumeBtn', 'progress', 'bar', 'wave', 'loading', 'playlist', 'list', 'volume', 'barEmpty', 'barFull', 'sliderBtn'];
-elms.forEach(function(elm) {
+elms.forEach(function (elm) {
   window[elm] = document.getElementById(elm);
 });
 
@@ -19,7 +19,7 @@ elms.forEach(function(elm) {
  * Includes all methods for playing, skipping, updating the display, etc.
  * @param {Array} playlist Array of objects with playlist song details ({title, file, howl}).
  */
-var Player = function(playlist) {
+var Player = function (playlist) {
   this.playlist = playlist;
   this.index = 0;
 
@@ -27,11 +27,11 @@ var Player = function(playlist) {
   track.innerHTML = '1. ' + playlist[0].title;
 
   // Setup the playlist display.
-  playlist.forEach(function(song) {
+  playlist.forEach(function (song) {
     var div = document.createElement('div');
     div.className = 'list-song';
     div.innerHTML = song.title;
-    div.onclick = function() {
+    div.onclick = function () {
       player.skipTo(playlist.indexOf(song));
     };
     list.appendChild(div);
@@ -42,7 +42,7 @@ Player.prototype = {
    * Play a song in the playlist.
    * @param  {Number} index Index of the song in the playlist (leave empty to play the first or current).
    */
-  play: function(index) {
+  play: function (index) {
     var self = this;
     var sound;
 
@@ -55,9 +55,9 @@ Player.prototype = {
       sound = data.howl;
     } else {
       sound = data.howl = new Howl({
-        src: ['./audio/' + data.file + '.webm', './audio/' + data.file + '.mp3'],
-        html5: true, // Force to HTML5 so that the audio can stream in (best for large files).
-        onplay: function() {
+        src: [data.src],
+        html5: false, // Force to HTML5 so that the audio can stream in (best for large files).
+        onplay: function () {
           // Display the duration.
           duration.innerHTML = self.formatTime(Math.round(sound.duration()));
 
@@ -69,27 +69,30 @@ Player.prototype = {
           bar.style.display = 'none';
           pauseBtn.style.display = 'block';
         },
-        onload: function() {
+        onload: function () {
           // Start the wave animation.
           wave.container.style.display = 'block';
           bar.style.display = 'none';
           loading.style.display = 'none';
         },
-        onend: function() {
+        onend: function () {
           // Stop the wave animation.
           wave.container.style.display = 'none';
           bar.style.display = 'block';
           self.skip('next');
         },
-        onpause: function() {
+        onpause: function () {
           // Stop the wave animation.
           wave.container.style.display = 'none';
           bar.style.display = 'block';
         },
-        onstop: function() {
+        onstop: function () {
           // Stop the wave animation.
           wave.container.style.display = 'none';
           bar.style.display = 'block';
+        },
+        onxhrprogress: function (e) {
+          console.log('3333', e.loaded)
         }
       });
     }
@@ -117,7 +120,7 @@ Player.prototype = {
   /**
    * Pause the currently playing track.
    */
-  pause: function() {
+  pause: function () {
     var self = this;
 
     // Get the Howl we want to manipulate.
@@ -135,7 +138,7 @@ Player.prototype = {
    * Skip to the next or previous track.
    * @param  {String} direction 'next' or 'prev'.
    */
-  skip: function(direction) {
+  skip: function (direction) {
     var self = this;
 
     // Get the next track based on the direction of the track.
@@ -159,7 +162,7 @@ Player.prototype = {
    * Skip to a specific track based on its playlist index.
    * @param  {Number} index Index in the playlist.
    */
-  skipTo: function(index) {
+  skipTo: function (index) {
     var self = this;
 
     // Stop the current track.
@@ -178,7 +181,7 @@ Player.prototype = {
    * Set the volume and update the volume slider display.
    * @param  {Number} val Volume between 0 and 1.
    */
-  volume: function(val) {
+  volume: function (val) {
     var self = this;
 
     // Update the global volume (affecting all Howls).
@@ -194,7 +197,7 @@ Player.prototype = {
    * Seek to a new position in the currently playing track.
    * @param  {Number} per Percentage through the song to skip.
    */
-  seek: function(per) {
+  seek: function (per) {
     var self = this;
 
     // Get the Howl we want to manipulate.
@@ -209,7 +212,7 @@ Player.prototype = {
   /**
    * The step called within requestAnimationFrame to update the playback position.
    */
-  step: function() {
+  step: function () {
     var self = this;
 
     // Get the Howl we want to manipulate.
@@ -229,11 +232,11 @@ Player.prototype = {
   /**
    * Toggle the playlist display on/off.
    */
-  togglePlaylist: function() {
+  togglePlaylist: function () {
     var self = this;
     var display = (playlist.style.display === 'block') ? 'none' : 'block';
 
-    setTimeout(function() {
+    setTimeout(function () {
       playlist.style.display = display;
     }, (display === 'block') ? 0 : 500);
     playlist.className = (display === 'block') ? 'fadein' : 'fadeout';
@@ -242,11 +245,11 @@ Player.prototype = {
   /**
    * Toggle the volume display on/off.
    */
-  toggleVolume: function() {
+  toggleVolume: function () {
     var self = this;
     var display = (volume.style.display === 'block') ? 'none' : 'block';
 
-    setTimeout(function() {
+    setTimeout(function () {
       volume.style.display = display;
     }, (display === 'block') ? 0 : 500);
     volume.className = (display === 'block') ? 'fadein' : 'fadeout';
@@ -257,7 +260,7 @@ Player.prototype = {
    * @param  {Number} secs Seconds to format.
    * @return {String}      Formatted time.
    */
-  formatTime: function(secs) {
+  formatTime: function (secs) {
     var minutes = Math.floor(secs / 60) || 0;
     var seconds = (secs - minutes * 60) || 0;
 
@@ -270,68 +273,71 @@ var player = new Player([
   {
     title: 'Rave Digger',
     file: 'rave_digger',
+    src: 'https://ak.picdn.net/shutterstock/audio/191111/preview/preview.mp3',
     howl: null
   },
   {
     title: '80s Vibe',
     file: '80s_vibe',
+    src: 'https://ak.picdn.net/shutterstock/audio/2756/preview/preview.mp3',
     howl: null
   },
   {
     title: 'Running Out',
     file: 'running_out',
+    src: 'https://ak.picdn.net/shutterstock/audio/2513/preview/preview.mp3',
     howl: null
   }
 ]);
 
 // Bind our player controls.
-playBtn.addEventListener('click', function() {
+playBtn.addEventListener('click', function () {
   player.play();
 });
-pauseBtn.addEventListener('click', function() {
+pauseBtn.addEventListener('click', function () {
   player.pause();
 });
-prevBtn.addEventListener('click', function() {
+prevBtn.addEventListener('click', function () {
   player.skip('prev');
 });
-nextBtn.addEventListener('click', function() {
+nextBtn.addEventListener('click', function () {
   player.skip('next');
 });
-waveform.addEventListener('click', function(event) {
+waveform.addEventListener('click', function (event) {
   player.seek(event.clientX / window.innerWidth);
 });
-playlistBtn.addEventListener('click', function() {
+playlistBtn.addEventListener('click', function () {
   player.togglePlaylist();
 });
-playlist.addEventListener('click', function() {
+playlist.addEventListener('click', function () {
   player.togglePlaylist();
 });
-volumeBtn.addEventListener('click', function() {
+volumeBtn.addEventListener('click', function () {
   player.toggleVolume();
 });
-volume.addEventListener('click', function() {
+volume.addEventListener('click', function () {
   player.toggleVolume();
 });
 
 // Setup the event listeners to enable dragging of volume slider.
-barEmpty.addEventListener('click', function(event) {
+barEmpty.addEventListener('click', function (event) {
   var per = event.layerX / parseFloat(barEmpty.scrollWidth);
   player.volume(per);
 });
-sliderBtn.addEventListener('mousedown', function() {
+sliderBtn.addEventListener('mousedown', function () {
   window.sliderDown = true;
 });
-sliderBtn.addEventListener('touchstart', function() {
+sliderBtn.addEventListener('touchstart', function () {
   window.sliderDown = true;
 });
-volume.addEventListener('mouseup', function() {
+volume.addEventListener('mouseup', function () {
   window.sliderDown = false;
 });
-volume.addEventListener('touchend', function() {
+volume.addEventListener('touchend', function () {
   window.sliderDown = false;
 });
 
-var move = function(event) {
+var move = function (event) {
   if (window.sliderDown) {
     var x = event.clientX || event.touches[0].clientX;
     var startX = window.innerWidth * 0.05;
@@ -358,7 +364,7 @@ wave.start();
 
 // Update the height of the wave animation.
 // These are basically some hacks to get SiriWave.js to do what we want.
-var resize = function() {
+var resize = function () {
   var height = window.innerHeight * 0.3;
   var width = window.innerWidth;
   wave.height = height;
